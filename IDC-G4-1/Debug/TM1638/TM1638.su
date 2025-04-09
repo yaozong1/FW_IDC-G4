@@ -1,0 +1,15 @@
+../TM1638/TM1638.c:120:1:TM1638_StartComunication	16	static
+../TM1638/TM1638.c:126:1:TM1638_StopComunication	16	static
+../TM1638/TM1638.c:132:1:TM1638_WriteBytes	40	static
+../TM1638/TM1638.c:153:1:TM1638_ReadBytes	40	static
+../TM1638/TM1638.c:179:1:TM1638_SetMultipleDisplayRegister	40	static
+../TM1638/TM1638.c:199:1:TM1638_ScanKeyRegs	32	static
+../TM1638/TM1638.c:231:1:TM1638_Init	24	static
+../TM1638/TM1638.c:257:1:TM1638_DeInit	16	static
+../TM1638/TM1638.c:292:1:TM1638_ConfigDisplay	32	static
+../TM1638/TM1638.c:322:1:TM1638_SetSingleDigit	16	static
+../TM1638/TM1638.c:351:1:TM1638_SetMultipleDigit	40	static
+../TM1638/TM1638.c:412:1:TM1638_SetSingleDigit_HEX	32	static
+../TM1638/TM1638.c:486:1:TM1638_SetMultipleDigit_HEX	48	static
+../TM1638/TM1638.c:566:1:TM1638_SetMultipleDigit_CHAR	48	static
+../TM1638/TM1638.c:756:1:TM1638_ScanKeys	32	static

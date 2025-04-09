@@ -1,0 +1,15 @@
+TM1638.c:120:1:TM1638_StartComunication	1
+TM1638.c:126:1:TM1638_StopComunication	1
+TM1638.c:132:1:TM1638_WriteBytes	3
+TM1638.c:153:1:TM1638_ReadBytes	3
+TM1638.c:179:1:TM1638_SetMultipleDisplayRegister	1
+TM1638.c:199:1:TM1638_ScanKeyRegs	1
+TM1638.c:231:1:TM1638_Init	3
+TM1638.c:257:1:TM1638_DeInit	1
+TM1638.c:292:1:TM1638_ConfigDisplay	2
+TM1638.c:322:1:TM1638_SetSingleDigit	2
+TM1638.c:351:1:TM1638_SetMultipleDigit	8
+TM1638.c:412:1:TM1638_SetSingleDigit_HEX	9
+TM1638.c:486:1:TM1638_SetMultipleDigit_HEX	10
+TM1638.c:566:1:TM1638_SetMultipleDigit_CHAR	35
+TM1638.c:756:1:TM1638_ScanKeys	5

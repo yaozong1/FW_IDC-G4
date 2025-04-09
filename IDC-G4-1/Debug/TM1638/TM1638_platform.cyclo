@@ -1,0 +1,12 @@
+TM1638_platform.c:44:1:TM1638_SetGPIO_OUT	1
+TM1638_platform.c:55:1:TM1638_SetGPIO_IN_PU	1
+TM1638_platform.c:67:1:TM1638_PlatformInit	1
+TM1638_platform.c:75:1:TM1638_PlatformDeInit	1
+TM1638_platform.c:80:1:TM1638_DioConfigOut	1
+TM1638_platform.c:86:1:TM1638_DioConfigIn	1
+TM1638_platform.c:92:1:TM1638_DioWrite	1
+TM1638_platform.c:98:1:TM1638_DioRead	1
+TM1638_platform.c:104:1:TM1638_ClkWrite	1
+TM1638_platform.c:110:1:TM1638_StbWrite	1
+TM1638_platform.c:116:1:TM1638_DelayUs	2
+TM1638_platform.c:137:1:TM1638_Platform_Init	1
