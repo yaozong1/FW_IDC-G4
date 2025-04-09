@@ -83,7 +83,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  uint32_t KeyS;
+  uint32_t *Keys = &KeyS; // 修正为取 KeyS 的地址
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -111,26 +112,54 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    // 阻塞接收
+    // HAL_UART_Receive(&huart1, rx_buf, sizeof(rx_buf) - 1, HAL_MAX_DELAY);
+    // SEGGER_RTT_WriteString(0, "Received via UART: ");
+    // SEGGER_RTT_WriteString(0, (char*)rx_buf);
+    // SEGGER_RTT_WriteString(0, "\n");
 
-	  /*HAL_UART_Receive(&huart1, rx_buf, sizeof(rx_buf) - 1, HAL_MAX_DELAY); // 阻塞接收
-	  SEGGER_RTT_WriteString(0, "Received via UART: ");
-	  SEGGER_RTT_WriteString(0, (char*)rx_buf);
-	  SEGGER_RTT_WriteString(0, "\n");
+    // memset(rx_buf, 0, sizeof(rx_buf)); // 清空缓冲准备下一次接收
 
-	  memset(rx_buf, 0, sizeof(rx_buf)); // 清空缓冲准备下一�?
+    // SEGGER_RTT_WriteString(0, "1234567: ");
+    // HAL_Delay(1000);
+   // TM1638_SetSingleDigit_HEX(&Handler, 8 | TM1638DecimalPoint, 1);
+    TM1638_ScanKeys(&Handler, Keys); // 调用按键扫描函数
 
+    // 以 16 位二进制形式打印按键值
+    SEGGER_RTT_WriteString(0, "Scanned key value (16-bit binary): ");
+    for (int i = 15; i >= 0; i--) {
+        SEGGER_RTT_PutChar(0, (*Keys & (1 << i)) ? '1' : '0');
+    }
+    SEGGER_RTT_WriteString(0, "\n");
 
-	  */
-	//  SEGGER_RTT_WriteString(0, "1234567: ");
-	 // HAL_Delay(1000);
-	  TM1638_SetSingleDigit_HEX(&Handler, 8 | TM1638DecimalPoint, 1);
+    // 判断按键第一位是否按下
+    if (*Keys & 0x0001) {
+        // 若按下，数码管第一位显示 7
+        TM1638_SetSingleDigit_HEX(&Handler, 7, 0);
+        HAL_Delay(800);
+    }
 
-    /* USER CODE END WHILE */
+    // 判断按键第一位是否按下
+    if (*Keys & 0x0002) {
+        // 若按下，数码管第一位显示 7
+        TM1638_SetSingleDigit_HEX(&Handler, 1, 1);
+        HAL_Delay(800);
+    }
 
-    /* USER CODE BEGIN 3 */
+   // TM1638_ConfigDisplay(&Handler, 5, TM1638DisplayStateOFF);
+    // 假设数码管有 8 位，逐个设置每个数码管为熄灭状态
+    for (int i = 0; i < 8; i++) {
+        TM1638_SetSingleDigit_HEX(&Handler, 0, i);
+    }
+    HAL_Delay(500); // 延时 1 秒
   }
+
+
+  /* USER CODE END WHILE */
+
+  /* USER CODE BEGIN 3 */
   TM1638_DeInit(&Handler);
-    return 0;
+  return 0;
   /* USER CODE END 3 */
 }
 

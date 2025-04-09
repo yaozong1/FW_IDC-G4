@@ -62,8 +62,8 @@ all: main-build
 main-build: IDC-G4-1.elf secondary-outputs
 
 # Tool invocations
-IDC-G4-1.elf IDC-G4-1.map: $(OBJS) $(USER_OBJS) C:\Users\h1576\STM32CubeIDE\workspace_1.12.1\IDC-G4-1\STM32F030C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "IDC-G4-1.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0 -T"C:\Users\h1576\STM32CubeIDE\workspace_1.12.1\IDC-G4-1\STM32F030C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IDC-G4-1.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+IDC-G4-1.elf IDC-G4-1.map: $(OBJS) $(USER_OBJS) C:\Users\h1576\Desktop\Burn\IDC-G4_FW\FW_IDC-G4\IDC-G4-1\STM32F030C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "IDC-G4-1.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0 -T"C:\Users\h1576\Desktop\Burn\IDC-G4_FW\FW_IDC-G4\IDC-G4-1\STM32F030C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IDC-G4-1.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
