@@ -23,7 +23,6 @@
 /* USER CODE BEGIN Includes */
 #include "SEGGER_RTT.h"
 #include <stdbool.h>
-
 #include <stdio.h>
 #include "TM1638.h"
 #include "TM1638_platform.h"
@@ -41,15 +40,19 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+  uint32_t KeyS;
+  uint32_t *Keys = &KeyS; // 修正为取 KeyS 的地�???
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+TIM_HandleTypeDef htim3;
+
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+volatile uint32_t timer_counter = 0; // 用于计数的变�???
+TM1638_Handler_t Handler;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -57,6 +60,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -83,8 +87,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  uint32_t KeyS;
-  uint32_t *Keys = &KeyS; // 修正为取 KeyS 的地址
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -98,14 +101,20 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   uint8_t rx_buf[16] = {0}; // 接收缓冲
 
-  TM1638_Handler_t Handler;
+
 
   TM1638_Platform_Init(&Handler);
   TM1638_Init(&Handler, TM1638DisplayTypeComAnode);
   TM1638_ConfigDisplay(&Handler, 4, TM1638DisplayStateON);
+
+  // 使能定时器TIM3的更新中�??
+  __HAL_TIM_ENABLE_IT(&htim3, TIM_IT_UPDATE);
+  // 启动定时器TIM3，开始计�??
+  HAL_TIM_Base_Start_IT(&htim3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -118,46 +127,52 @@ int main(void)
     // SEGGER_RTT_WriteString(0, (char*)rx_buf);
     // SEGGER_RTT_WriteString(0, "\n");
 
-    // memset(rx_buf, 0, sizeof(rx_buf)); // 清空缓冲准备下一次接收
+    // memset(rx_buf, 0, sizeof(rx_buf)); // 清空缓冲准备下一次接�???
 
     // SEGGER_RTT_WriteString(0, "1234567: ");
     // HAL_Delay(1000);
    // TM1638_SetSingleDigit_HEX(&Handler, 8 | TM1638DecimalPoint, 1);
-    TM1638_ScanKeys(&Handler, Keys); // 调用按键扫描函数
+  //  TM1638_ScanKeys(&Handler, Keys); // 调用按键扫描函数
 
-    // 以 16 位二进制形式打印按键值
+    // �??? 16 位二进制形式打印按键�???
+  //  SEGGER_RTT_WriteString(0, "Scanned key value (16-bit binary): ");
+
+      TM1638_ScanKeys(&Handler, Keys);
+
+    // �??? 16 位二进制形式打印按键�???
     SEGGER_RTT_WriteString(0, "Scanned key value (16-bit binary): ");
+
     for (int i = 15; i >= 0; i--) {
         SEGGER_RTT_PutChar(0, (*Keys & (1 << i)) ? '1' : '0');
     }
     SEGGER_RTT_WriteString(0, "\n");
 
-    // 判断按键第一位是否按下
+    // 判断按键第一位是否按�???
     if (*Keys & 0x0001) {
-        // 若按下，数码管第一位显示 7
+        // 若按下，数码管第�???位显�??? 7
         TM1638_SetSingleDigit_HEX(&Handler, 7, 0);
         HAL_Delay(800);
     }
 
-    // 判断按键第一位是否按下
+    // 判断按键第一位是否按�???
     if (*Keys & 0x0002) {
-        // 若按下，数码管第一位显示 7
+        // 若按下，数码管第�???位显�??? 7
         TM1638_SetSingleDigit_HEX(&Handler, 1, 1);
         HAL_Delay(800);
     }
 
    // TM1638_ConfigDisplay(&Handler, 5, TM1638DisplayStateOFF);
-    // 假设数码管有 8 位，逐个设置每个数码管为熄灭状态
+    // 假设数码管有 8 位，逐个设置每个数码管为熄灭状�??
     for (int i = 0; i < 8; i++) {
         TM1638_SetSingleDigit_HEX(&Handler, 0, i);
     }
-    HAL_Delay(500); // 延时 1 秒
+    HAL_Delay(50); // 延时 1 �???
   }
 
 
-  /* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-  /* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
   TM1638_DeInit(&Handler);
   return 0;
   /* USER CODE END 3 */
@@ -176,10 +191,12 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL6;
+  RCC_OscInitStruct.PLL.PREDIV = RCC_PREDIV_DIV1;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -189,11 +206,11 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     Error_Handler();
   }
@@ -203,6 +220,55 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
+  /** Enables the Clock Security System
+  */
+  HAL_RCC_EnableCSS();
+}
+
+/**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 4799;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 999;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+
 }
 
 /**
@@ -293,7 +359,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB4 PB5 PB6 */
   GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6;
@@ -307,7 +383,21 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+// 定时器中断处理函�???
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    if (htim == &htim3) {
+        timer_counter++;
+        if (timer_counter >= 1) {
+            // 在这里添�??? 1 秒间隔执行的代码
+            SEGGER_RTT_WriteString(0, "Timer interrupt occurred!\n");
+            timer_counter = 0;
+            HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 
+
+        }
+    }
+}
 /* USER CODE END 4 */
 
 /**
