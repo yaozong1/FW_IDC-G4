@@ -37,14 +37,14 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define RX_BUF_SIZE 200  // 定义接收缓冲区大�?
-//#define BLINK_INTERVAL 500  // 小数点闪烁间隔，单位：毫�?
+#define RX_BUF_SIZE 200  // 定义接收缓冲区大�??
+//#define BLINK_INTERVAL 500  // 小数点闪烁间隔，单位：毫�??
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
   uint32_t KeyS;
-  uint32_t *Keys = &KeyS; // 修正为取 KeyS 的地�??????
+  uint32_t *Keys = &KeyS; // 修正为取 KeyS 的地�???????
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -54,21 +54,21 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-volatile uint32_t timer_counter = 0; // 用于计数的变�??????
+volatile uint32_t timer_counter = 0; // 用于计数的变�???????
 
 uint8_t rx_buf[RX_BUF_SIZE];
-uint16_t rx_index = 0;  // 接收数据的索�?
+uint16_t rx_index = 0;  // 接收数据的索�??
 
 // 新增标志位，用于标记是否接收到有效的 $GNRMC 语句
 bool gnrmcReceived = false;
 // 新增变量用于存储时间信息
 int hours, minutes, seconds;
 
-// 新增变量用于记录小数点状�?
+// 新增变量用于记录小数点状�??
 bool decimalPointState = true;
 
 bool position_3d = 0;
-// 新增变量用于记录小数点闪烁计�?
+// 新增变量用于记录小数点闪烁计�??
 volatile uint32_t blinkCounter = 0;
 
 TM1638_Handler_t Handler;
@@ -143,7 +143,7 @@ int main(void)
 //     SEGGER_RTT_WriteString(0, (char*)rx_buf);
 //     SEGGER_RTT_WriteString(0, "\n");
 //
-//     memset(rx_buf, 0, sizeof(rx_buf)); // 清空缓冲准备下一次接�??????
+//     memset(rx_buf, 0, sizeof(rx_buf)); // 清空缓冲准备下一次接�???????
 
 	  if(position_3d)
 	  {
@@ -162,15 +162,13 @@ int main(void)
 	  }
 
 
-
-
-
-
-
+	    if (huart1.RxState == HAL_UART_STATE_READY && !HAL_UART_GetState(&huart1)) {
+	        HAL_UART_Receive_IT(&huart1, &rx_buf[rx_index], 1);
+	    }
 
       TM1638_ScanKeys(&Handler, Keys);
 
-//    // �?????? 16 位二进制形式打印按键�??????
+//    // �??????? 16 位二进制形式打印按键�???????
 //    SEGGER_RTT_WriteString(0, "Scanned key value (16-bit binary): ");
 //
 //    for (int i = 15; i >= 0; i--) {
@@ -178,16 +176,16 @@ int main(void)
 //    }
 //    SEGGER_RTT_WriteString(0, "\n");
 
-    // 判断按键第一位是否按�??????
+    // 判断按键第一位是否按�???????
     if (*Keys & 0x0001) {
-        // 若按下，数码管第�??????位显�?????? 7
+        // 若按下，数码管第�???????位显�??????? 7
         TM1638_SetSingleDigit_HEX(&Handler, 7, 0);
         HAL_Delay(800);
     }
 
-    // 判断按键第一位是否按�??????
+    // 判断按键第一位是否按�???????
     if (*Keys & 0x0002) {
-        // 若按下，数码管第�??????位显�?????? 7
+        // 若按下，数码管第�???????位显�??????? 7
         TM1638_SetSingleDigit(&Handler, 0, 0);//没有HEX尾缀的这个函数，输入0的话是关闭数码管
         HAL_Delay(800);
     }
@@ -199,12 +197,12 @@ int main(void)
     //    }
 
 
-    // �?查是否接收到有效�? $GNRMC 语句
+    // �??查是否接收到有效�?? $GNRMC 语句
     if (gnrmcReceived) {
         // 转换为东八区时间
         hours = (hours + 8) % 24;
 
-        // 将时间显示在数码管后四位，修正显示顺�?
+        // 将时间显示在数码管后四位，修正显示顺�??
         TM1638_SetSingleDigit_HEX(&Handler, minutes % 10, 4);  // 分钟个位
         TM1638_SetSingleDigit_HEX(&Handler, minutes / 10, 5);  // 分钟十位
         //TM1638_SetSingleDigit_HEX(&Handler, hours % 10, 6);  // 小时个位
@@ -218,7 +216,7 @@ int main(void)
 
 
 
-        // 重置标志�?
+        // 重置标志�??
         gnrmcReceived = false;
     }
 
@@ -270,7 +268,7 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1;
-  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK1;
+  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_SYSCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -321,7 +319,8 @@ static void MX_TIM3_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM3_Init 2 */
-
+  HAL_NVIC_SetPriority(TIM3_IRQn, 1, 0);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
   /* USER CODE END TIM3_Init 2 */
 
 }
@@ -356,7 +355,10 @@ static void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
-  // �?启接收中�?
+  // �??启接收中�??
+  // 确保UART中断优先级高于定时器中断
+  HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(USART1_IRQn);
   HAL_UART_Receive_IT(&huart1, &rx_buf[rx_index], 1);
   /* USER CODE END USART1_Init 2 */
 
@@ -445,7 +447,37 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-// 定时器中断处理函�??????
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+    if (huart == &huart1) {
+        // 读取错误标志
+        uint32_t error_flags = huart->ErrorCode;
+
+        // 打印具体错误类型
+        if (error_flags & HAL_UART_ERROR_PE) {
+            SEGGER_RTT_WriteString(0, "UART Parity Error\n");
+        }
+        if (error_flags & HAL_UART_ERROR_FE) {
+            SEGGER_RTT_WriteString(0, "UART Framing Error\n");
+        }
+        if (error_flags & HAL_UART_ERROR_NE) {
+            SEGGER_RTT_WriteString(0, "UART Noise Error\n");
+        }
+        if (error_flags & HAL_UART_ERROR_ORE) {
+            SEGGER_RTT_WriteString(0, "UART Overrun Error\n");
+        }
+
+        // 清除错误标志
+        __HAL_UART_CLEAR_FLAG(huart, UART_FLAG_PE | UART_FLAG_FE | UART_FLAG_NE | UART_FLAG_ORE);
+
+        // 重新启动接收
+        rx_index = 0;
+        memset(rx_buf, 0, RX_BUF_SIZE);
+        HAL_UART_Receive_IT(&huart1, &rx_buf[rx_index], 1);
+    }
+}
+
+// 定时器中断处理函�???????
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if (htim == &htim3) {
@@ -454,7 +486,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         blinkCounter++;
 
         if (timer_counter >= 5) {
-            // 在这里添�?????? 1 秒间隔执行的代码
+            // 在这里添�??????? 1 秒间隔执行的代码
           //  SEGGER_RTT_WriteString(0, "Timer interrupt occurred!\n");
             timer_counter = 0;
             HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
@@ -467,8 +499,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
         if (blinkCounter >= 7) {  // 50 是主循环中的延时时间
             blinkCounter = 0;
-            decimalPointState = !decimalPointState;  // 切换小数点状�?
-            SEGGER_RTT_WriteString(0, "occurred!\n");
+            decimalPointState = !decimalPointState;  // 切换小数点状�??
+          //  SEGGER_RTT_WriteString(0, "occurred!\n");
         }
     }
 }
@@ -476,30 +508,35 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 // UART接收中断回调函数
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     if (huart == &huart1) {
-        if (rx_index < RX_BUF_SIZE - 1) {
-            if (rx_buf[rx_index] == '\n') {
-                // 判断是否�? $GNRMC 语句
-                if (strncmp((const char*)rx_buf, "$GNRMC", 6) == 0) {
-                    sscanf((const char*)rx_buf + 7, "%2d%2d%2d", &hours, &minutes, &seconds);
-                    // 设置标志位，表示已接收到有效�? $GNRMC 语句
-                    gnrmcReceived = true;
-                }
+        // 处理接收到的字节
+        if (rx_buf[rx_index] == '\n' || rx_index >= RX_BUF_SIZE - 1) {
+            // 打印接收到的数据
+            SEGGER_RTT_WriteString(0, "Received via UART: ");
+            SEGGER_RTT_WriteString(0, (char*)rx_buf);
+            SEGGER_RTT_WriteString(0, "\n");
+            // 判断是否是$GNRMC语句
+//            if (rx_index >= 6 && strncmp((const char*)rx_buf, "$GNRMC", 6) == 0) {
+//                sscanf((const char*)rx_buf + 7, "%2d%2d%2d", &hours, &minutes, &seconds);
+//                gnrmcReceived = true;
+//            }
 
-                // 接收到换行符，打印接收到的数�?
-                SEGGER_RTT_WriteString(0, "Received via UART: ");
-                SEGGER_RTT_WriteString(0, (char*)rx_buf);
-                SEGGER_RTT_WriteString(0, "\n");
 
-                // 清空缓冲�?
-                memset(rx_buf, 0, sizeof(rx_buf));
-                rx_index = 0; // 确保rx_index重置�?0
-            } else {
-                // 接收�?个字节数�?
-                rx_index++;
-            }
-            // 继续�?启下�?个字节的接收中断
-            HAL_UART_Receive_IT(&huart1, &rx_buf[rx_index], 1);
+
+            // 清空缓冲区
+            memset(rx_buf, 0, RX_BUF_SIZE);
+            rx_index = 0;
+        } else {
+            // 接收下一个字节数据
+            rx_index++;
         }
+
+        // 确保索引不越界
+        if (rx_index >= RX_BUF_SIZE) {
+            rx_index = 0;
+        }
+
+        // 重新启用接收中断
+        HAL_UART_Receive_IT(&huart1, &rx_buf[rx_index], 1);
     }
 }
 /* USER CODE END 4 */
