@@ -37,14 +37,14 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define RX_BUF_SIZE 256  // 定义接收缓冲区大�??
-//#define BLINK_INTERVAL 500  // 小数点闪烁间隔，单位：毫�??
+#define RX_BUF_SIZE 256  // 定义接收缓冲区大�???
+//#define BLINK_INTERVAL 500  // 小数点闪烁间隔，单位：毫�???
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
   uint32_t KeyS;
-  uint32_t *Keys = &KeyS; // 修正为取 KeyS 的地�???????
+  uint32_t *Keys = &KeyS; // 修正为取 KeyS 的地�????????
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -54,10 +54,10 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-volatile uint32_t timer_counter = 0; // 用于计数的变�???????
+volatile uint32_t timer_counter = 0; // 用于计数的变�????????
 
 // 双缓冲区配置
-#define RX_BUF_SIZE 256  // 增大缓冲区防止溢出
+#define RX_BUF_SIZE 256  // 增大缓冲区防止溢�?
 uint8_t rx_buf1[RX_BUF_SIZE];
 uint8_t rx_buf2[RX_BUF_SIZE];
 uint8_t *active_buf = rx_buf1;
@@ -68,19 +68,19 @@ uint8_t processing_buf[RX_BUF_SIZE];
 // 新增标志位，用于标记是否接收到有效的 $GNRMC 语句
 bool gnrmcReceived = false;
 
-//标志位，用于标记啥时候运行数码管的显示部分
+//标志位，用于标记啥时候运行数码管的显示部�?
 bool tm1638_operate = false;
 
 // 新增变量用于存储时间信息
 int hours, minutes, seconds;
 
-// 新增变量用于记录小数点状�??
+// 新增变量用于记录小数点状�???
 bool decimalPointState = true;
 
 // 新增标志位，用于记录是否定位成功
 bool position_3d = 0;
 
-// 新增变量用于记录小数点闪烁计�??
+// 新增变量用于记录小数点闪烁计�???
 volatile uint32_t blinkCounter = 0;
 
 TM1638_Handler_t Handler;
@@ -151,14 +151,18 @@ int main(void)
   {
       // 处理准备好的UART数据
        if (buf_ready) {
-           __disable_irq();  // 短暂禁用中断保护缓冲区切换
+    	   uint32_t primask = __get_PRIMASK();  // 保存当前中断状�??//�?个时钟周�?
+           __disable_irq();  // 短暂禁用中断保护缓冲区切�?//�?个时钟周�?
            memcpy(processing_buf,
-                 (active_buf == rx_buf1) ? rx_buf2 : rx_buf1, //这个刚好和UART中断里面一前一后，processing_buf会取到和中断里active_buf相反的缓冲区，不记得的时候推演一下就清晰了
-                 RX_BUF_SIZE);
+                 (active_buf == rx_buf1) ? rx_buf2 : rx_buf1, //这个刚好和UART中断里面�?前一后，processing_buf会取到和中断里active_buf相反的缓冲区，不记得的时候推演一下就清晰�?
+                 RX_BUF_SIZE);//memcpy(256字节)	~800时钟周期
            buf_ready = false;
-           __enable_irq();
 
-           // 打印原始数据（调试用）
+           __set_PRIMASK(primask);              // 恢复中断状�??  //�?个时钟周�?
+          // __enable_irq();                  // 如果是没有顺序需要的话，可以不使用__set_PRIMASK(primask); �?个时钟周�?
+         //整个临界区约810个周期（17μs），远小于UART字节间隔�?115200bps时为87μs/字节�?,�?以不会丢失数据，不用保存中断状�?�直接禁�?/�?启中�? 也应该问题不�?
+
+           // 打印原始数据（调试用�?
           // SEGGER_RTT_WriteString(0, "UART Data: ");
           // SEGGER_RTT_WriteString(0, (char*)processing_buf);
 
@@ -166,7 +170,7 @@ int main(void)
            char* gnrmc_ptr = strstr((char*)processing_buf, "$GNRMC");
            if (gnrmc_ptr != NULL) {
                if (sscanf(gnrmc_ptr + 7, "%2d%2d%2d", &hours, &minutes, &seconds) == 3) {
-             hours = (hours + 8) % 24; //切换一下东八区
+             hours = (hours + 8) % 24; //切换�?下东八区
              gnrmcReceived = true;
                }
            }
@@ -174,7 +178,7 @@ int main(void)
 
        if (gnrmcReceived) {
 
-     //接收到新的消息要干的事
+     //接收到新的消息要干的�?
            gnrmcReceived = false;
      }
 
@@ -182,7 +186,7 @@ int main(void)
 if(tm1638_operate)
       {
 
-     	    // 处理3D定位状态显示
+     	    // 处理3D定位状�?�显�?
      	    TM1638_SetSingleDigit_HEX(&Handler, position_3d ? 3 : 0, 2);
      	    TM1638_SetSingleDigit_HEX(&Handler, position_3d ? 0x0D : 0, 1);
 
@@ -199,7 +203,7 @@ if(tm1638_operate)
 
      	    // 显示时间数据
 
-     	    // 将时间显示在数码管后四位，修正显示顺�??
+     	    // 将时间显示在数码管后四位，修正显示顺�???
      	    TM1638_SetSingleDigit_HEX(&Handler, minutes % 10, 4);  // 分钟个位
      	    TM1638_SetSingleDigit_HEX(&Handler, minutes / 10, 5);  // 分钟十位
      	    //TM1638_SetSingleDigit_HEX(&Handler, hours % 10, 6);  // 小时个位
@@ -213,7 +217,7 @@ if(tm1638_operate)
 
 
      	    decimalPointState = !decimalPointState;  // 切换小数点状,下次就会生效
-     	    tm1638_operate = false;                  // 退出循环，等待TIM3开启为True
+     	    tm1638_operate = false;                  // �?出循环，等待TIM3�?启为True
         }
   }
 
@@ -355,7 +359,7 @@ static void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
-  // �??启接收中�??
+  // �???启接收中�???
   // 确保UART中断优先级高于定时器中断
   HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(USART1_IRQn);
@@ -420,7 +424,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
@@ -429,17 +433,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : PB2 PB4 PB5 PB6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
   /*Configure GPIO pin : PB11 */
   GPIO_InitStruct.Pin = GPIO_PIN_11;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PB4 PB5 PB6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
@@ -447,7 +451,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-// 定时器中断处理函�???????
+// 定时器中断处理函�????????
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if (htim == &htim3) {
@@ -502,7 +506,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
             active_buf[rx_index] = '\0';
             buf_ready = true;
             rx_index = 0;
-            active_buf = (active_buf == rx_buf1) ? rx_buf2 : rx_buf1;//切换缓冲区
+            active_buf = (active_buf == rx_buf1) ? rx_buf2 : rx_buf1;//切换缓冲�?
             SEGGER_RTT_WriteString(0, "UART Data: ");
             SEGGER_RTT_WriteString(0, (char*)active_buf);
         }
